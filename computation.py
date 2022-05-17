@@ -9,7 +9,8 @@
 import argparse
 from logging import warning
 import utils
-from os import listdir
+from os import listdir, makedirs
+from os.path import exists
 from meshio import read
 from pickle import dump, load
 
@@ -46,6 +47,9 @@ if __name__ == '__main__':
 
     if args.output[-1] != '\\' and args.output[-1] != '/':
         args.output += '/'
+    
+    if not exists(args.output):
+        makedirs(args.output)
 
     if args.file_name == None:
         args.file_name = 'X'
