@@ -247,39 +247,35 @@ if __name__ == '__main__':
         scan = scan.points
         return scan
 
-    from time import time
-
-    start = time()
-
     # spl = np.random.choice(range(len(all_scans)), 2, replace=False)
-    spl = [1487, 404]
+    spl = [1487, 1057]
 
-    min_persistence = 2
+    min_persistence = 3
     radius = np.sqrt(min_persistence)
     scan = scan_from_index(spl[0])
     PS1 = points_set(scan)
-    PS1.normalize()
+    PS1.normalize(PS1.height()*100)
 
     decolored_PS1 = PS1.DecoloredPersistence(min_persistence=min_persistence)
 
     scan = scan_from_index(spl[1])
     PS2 = points_set(scan)
-    PS2.normalize()
+    PS2.normalize(PS2.height()*100)
 
     decolored_PS2 = PS2.DecoloredPersistence(min_persistence=min_persistence)
 
     print("\nSCANS "+str(spl[0])+" ET "+str(spl[1]))
-    print("Distance entre diagrammes :",
-          decolored_dist(decolored_PS1, decolored_PS2, [1, 2]))
+    a, b, c = decolored_dist(decolored_PS1, decolored_PS2, [0, 1, 2])
+    print("Distance entre diagrammes :", np.sqrt(a**2+b**2+c**2))
 
-    fig = plt.figure(figsize=(12, 5))
-    fig.suptitle(spl[0])
-    PS1.PlotPersistenceDiagram(axes=fig.add_subplot(121))
-    PS1.PlotPersistenceBarcode(axes=fig.add_subplot(122))
-    plt.show()
+    # fig = plt.figure(figsize=(12, 5))
+    # fig.suptitle(spl[0])
+    # PS1.PlotPersistenceDiagram(axes=fig.add_subplot(121))
+    # PS1.PlotPersistenceBarcode(axes=fig.add_subplot(122))
+    # plt.show()
 
-    fig = plt.figure(figsize=(12, 5))
-    fig.suptitle(spl[1])
-    PS2.PlotPersistenceDiagram(axes=fig.add_subplot(121))
-    PS2.PlotPersistenceBarcode(axes=fig.add_subplot(122))
-    plt.show()
+    # fig = plt.figure(figsize=(12, 5))
+    # fig.suptitle(spl[1])
+    # PS2.PlotPersistenceDiagram(axes=fig.add_subplot(121))
+    # PS2.PlotPersistenceBarcode(axes=fig.add_subplot(122))
+    # plt.show()
