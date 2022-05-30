@@ -1,59 +1,95 @@
 # Depuis le répertoire du dépôt:
-#   - Pour calculer les diagrammes et les distances entre eux pour les hommes:
-#       python .\computation.py -i [Chemin du répertoire contenant les scans masculins] -o ./Data -f XX -v
+#   - Pour calculer les diagrammes pour les hommes:
+#       python .\computation.py -i [Chemin du répertoire contenant les scans masculins] -o ./Data -f XX -v -diag
 #   - Pour calculer les diagrammes et les distances entre eux pour les femmes:
-#       python .\computation.py -i [Chemin du répertoire contenant les scans féminins] -o ./Data -f XX -v
+#       python .\computation.py -i [Chemin du répertoire contenant les scans féminins] -o ./Data -f XX -v -diag -dist
 #   - Pour calculer les distances entre tous les diagrammes:
-#       python .\computation.py -i ./Data/XY -i ./Data/XX -o ./Data -f X -v -d
+#       python .\computation.py -i ./Data/XY.bin -i ./Data/XX.bin -o ./Data -f X -v -dist -p
 
 import argparse
-from logging import warning
-import utils
+import utils as ut
 from os import listdir, makedirs
 from os.path import exists
 from meshio import read
 from pickle import dump, load
+from datetime import timedelta
+
+
+def scan_from_index(path):
+    scan = read(path)
+    scan = scan.points
+    ps = ut.point_set(scan)
+    ps.normalize()
+
+    return ps
+
+
+def diagrams(ps, min_p):
+    diag = ps.Persistence(min_persistence=min_p)
+    diag_decolor = ps.DecoloredPersistence()
+
+    return (diag, diag_decolor)
+
+
+def decolored_dist(Xi, Xj, p, order):
+    return ut.decolored_dist(Xi, Xj, [0, 1, 2], p=p, order=order)
+
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(prog='Computation', description='Compute diagrams and distances')
-    parser.add_argument('-m', '--min_persistence', type=float, default=3.)
-    parser.add_argument('-d', '--dist', action='store_true', help='Compute only distance (Diagrams files must exist !)')
+    parser = argparse.ArgumentParser(
+        prog='Computation', description='Compute diagrams and distances')
+    parser.add_argument('-wp', '--internal_p', type=float,
+                        default=2., help='Wasserstein internal p')
+    parser.add_argument('-wo', '--order', type=float,
+                        default=2., help='Wasserstein order')
+    parser.add_argument('-mp', '--min_persistence', type=float,
+                        default=3., help='Diagrams minimum persistence')
+    parser.add_argument('-dist', '--distances', action='store_true',
+                        help='Compute distances')
+    parser.add_argument('-diag', '--diagrams', action='store_true',
+                        help='Compute diagrams')
     parser.add_argument('-i', '--input', action='append',
-                        help='<Required> Input directory (+ root of files if --dist)', required=True)
+                        help='If -diags: Input directory\nElse     : Input file', required=True)
     parser.add_argument('-o', '--output', default='.', help='Output directory')
     parser.add_argument('-f', '--file_name', help='Root of output files')
-    parser.add_argument('-v', '--verbose', action='store_true', help='Displays the remaining calculation time')
+    parser.add_argument('-v', '--verbose', action='store_true')
+    parser.add_argument('-p', '--parallel', action='store_true',
+                        help='Allow parallelisation')
     args = parser.parse_args()
 
     all_scans = []
     nb_scans = []
     nb_total = 0
 
-    def scan_from_index(i, index):
-        path = args.input[i] + str(all_scans[i][index])
-        scan = read(path)
-        scan = scan.points
-        return scan
+    if not args.parallel:
+        def scan_from_index(i, index):
+            path = args.input[i] + str(all_scans[i][index])
+            scan = read(path)
+            scan = scan.points
+            return scan
+    else:
+        import multiprocessing as mp
+        nb_cpu = mp.cpu_count()
 
     if args.verbose == True:
         from time import time
 
     X = []
-    X_decolor = []
+    Xd = []
 
     print("\033[H\033[J", end="")
     print(args.input, '-->', args.output)
 
     if args.output[-1] != '\\' and args.output[-1] != '/':
         args.output += '/'
-    
+
     if not exists(args.output):
         makedirs(args.output)
 
     if args.file_name == None:
         args.file_name = 'X'
 
-    if not args.dist:
+    if args.diagrams:
         for i in range(len(args.input)):
             if args.input[i][-1] != '\\' and args.input[i][-1] != '/':
                 args.input[i] += '/'
@@ -63,39 +99,60 @@ if __name__ == '__main__':
             nb_scans.append(length)
             nb_total += length
 
-        if args.verbose == True:
-            begin = time()
-            k = 1
-
-        for i in range(len(args.input)):
-            for index in range(nb_scans[i]):
-                scan = scan_from_index(i, index)
-
-                points_set = utils.points_set(scan)
-                points_set.normalize()
-                diag = points_set.Persistence(
-                    min_persistence=args.min_persistence)
-                X.append(diag)
-
-                diag_decolor = points_set.DecoloredPersistence()
-                X_decolor.append(diag_decolor)
-
+        if args.parallel:
+            for i in range(len(args.input)):
                 if args.verbose:
-                    temp = (time()-begin) / k * (nb_total-k)
-                    h = int(temp // 3600)
-                    temp = temp - h * 3600
-                    m = int(temp // 60)
-                    s = int(temp % 60)
-                    temps_restant = ''
-                    if h > 0:
-                        temps_restant = str(h)+'h'+str(m)+'m'+str(s)+'s'
-                    elif m > 0:
-                        temps_restant = str(m)+'m'+str(s)+'s'
-                    else:
-                        temps_restant = str(s)+'s'
-                    print('\rCalcul des diagrammes : ' +
-                          temps_restant + '       ', end='')
-                    k += 1
+                    print('Loading data...')
+
+                paths = [args.input[i]+all_scans[i][index]
+                         for index in range(nb_scans[i])]
+
+                pool = mp.Pool(nb_cpu)
+                sets = pool.map(scan_from_index, paths)
+                pool.close()
+
+                if args.verbose == True and i == 0:
+                    begin = time()
+                    print("\033[H\033[J", end="")
+                    print(args.input, '-->', args.output+args.file_name)
+                    print('Computing diagrams...')
+                    k = 1
+
+                pool = mp.Pool(nb_cpu)
+                diags = pool.starmap(diagrams, [(set, args.min_persistence) for set in sets])
+                pool.close()
+
+                for diag in diags:
+                    X.append(diag[0])
+                    Xd.append(diag[1])
+
+                del sets
+        else:
+            if args.verbose == True:
+                begin = time()
+                print("\033[H\033[J", end="")
+                print(args.input, '-->', args.output+args.file_name)
+                print('Computing diagrams')
+                k = 1
+
+            for i in range(len(args.input)):
+                for index in range(nb_scans[i]):
+                    scan = scan_from_index(i, index)
+
+                    point_set = ut.point_set(scan)
+                    point_set.normalize()
+                    diag = point_set.Persistence(min_persistence=3)
+                    X.append(diag)
+
+                    diag_decolor = point_set.DecoloredPersistence()
+                    Xd.append(diag_decolor)
+
+                    if args.verbose:
+                        temp = (time()-begin) / k * (nb_total-k)
+                        temps_restant = str(timedelta(seconds=temp))[:7]
+                        print('\r   Estimated remaining time : ' +
+                              temps_restant, end='')
+                        k += 1
 
         print('\rSaving diagrams       ', end='')
 
@@ -103,53 +160,61 @@ if __name__ == '__main__':
             dump(X, fp)
 
         with open(args.output+args.file_name+'_decolor.bin', 'wb') as fp:
-            dump(X_decolor, fp)
+            dump(Xd, fp)
     else:
-        for npt in args.input:
-            with open(npt+'.bin', 'rb') as fp:
-                X += load(fp)
+        for input_file in args.input:
+            with open(input_file, 'rb') as fp:
+                Xd += load(fp)
+        nb_total = len(Xd)
 
-            with open(npt+'_decolor.bin', 'rb') as fp:
-                X_decolor += load(fp)
-        nb_total = len(X)
+    if args.distances:
+        d0 = {}
+        d1 = {}
+        d2 = {}
 
-    dict_dist_0 = {}
-    dict_dist_1 = {}
-    dict_dist_2 = {}
+        if args.parallel:
+            if args.verbose == True:
+                begin = time()
+                print("\033[H\033[J", end="")
+                print(args.input, '-->', args.output+args.file_name)
+                print('Computing distances...')
 
-    if args.verbose == True:
-        begin = time()
-        n = nb_total * (nb_total - 1) / 2
+            pool = mp.Pool(nb_cpu)
+            for i in range(nb_total):
+                temp = pool.starmap(decolored_dist, [(Xd[i], Xj, args.internal_p, args.order) for Xj in Xd[i+1:]])
+                for j in range(i+1, nb_total):
+                    [d0[(i, j)], d1[(i, j)], d2[(i, j)]] = temp[j-i-1]
+            pool.close()
+        else:
+            if args.verbose == True:
+                begin = time()
+                print("\033[H\033[J", end="")
+                print(args.input, '-->', args.output+args.file_name)
+                print('Computing distances')
+                n = nb_total * (nb_total - 1) / 2
+                k = 1
 
-    for i in range(nb_total):
-        for j in range(i+1, nb_total):
-            dict_dist_0[(i, j)], dict_dist_1[(i, j)], dict_dist_2[(
-                i, j)] = utils.decolored_dist(X_decolor[i], X_decolor[j], [0, 1, 2])
-            if args.verbose:
-                m = (nb_total - i) * (nb_total - i - 1) / 2 + j - i
-                if m % (n // 200) == 0:
-                    temp = (time()-begin) / (n - m) * (m - 1)
-                    h = int(temp // 3600)
-                    temp = temp - h * 3600
-                    m = int(temp // 60)
-                    s = int(temp % 60)
-                    temps_restant = ''
-                    if h > 0:
-                        temps_restant = "{:02d}".format(
-                            h)+'h'+"{:02d}".format(m)+'m'+"{:02d}".format(s)+'s'
-                    elif m > 0:
-                        temps_restant = "{:02d}".format(
-                            m)+'m'+"{:02d}".format(s)+'s'
-                    else:
-                        temps_restant = "{:02d}".format(s)+'s'
-                    print('\rCalcul des distances : ' +
-                          temps_restant + '       ', end='')
-    print('\rSaving distances       ', end='')
+            for i in range(nb_total):
+                for j in range(i+1, nb_total):
+                    [d0[(i, j)], d1[(i, j)], d2[(i, j)]] = decolored_dist(
+                        Xd[i], Xd[j], p=args.internal_p, order=args.order)
+                    if args.verbose:
+                        if k % nb_total == 0:
+                            temp = (time()-begin) / k * (n - k)
+                            temps_restant = str(timedelta(seconds=temp))[:7]
+                            print('\r   Estimated remaining time : ' +
+                                  temps_restant, end='')
+                        k += 1
 
-    with open(args.output+args.file_name+'_Dist_H0.bin', 'wb') as fp:
-        dump(dict_dist_0, fp)
-    with open(args.output+args.file_name+'_Dist_H1.bin', 'wb') as fp:
-        dump(dict_dist_1, fp)
-    with open(args.output+args.file_name+'_Dist_H2.bin', 'wb') as fp:
-        dump(dict_dist_2, fp)
-    print('\rFinished       ', end='')
+        if args.verbose == True:
+            print("\033[H\033[J", end="")
+            print(args.input, '-->', args.output+args.file_name)
+            print('\rSaving distances...', end='')
+
+        with open(args.output+args.file_name+'_Dist_H0.bin', 'wb') as fp:
+            dump(d0, fp)
+        with open(args.output+args.file_name+'_Dist_H1.bin', 'wb') as fp:
+            dump(d1, fp)
+        with open(args.output+args.file_name+'_Dist_H2.bin', 'wb') as fp:
+            dump(d2, fp)
+    print('\rFinished!             ')

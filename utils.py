@@ -25,7 +25,7 @@ class Graph(nx.Graph):
         self.add_edges_from(edges)
 
 
-class points_set:
+class point_set:
     def __init__(self, points: np.ndarray) -> None:
         self.points = points.copy()
         self.nb, self.dim = self.points.shape
@@ -127,22 +127,23 @@ class points_set:
         self.points *= coeff
 
 
-def decolored_dist(X1, X2, dim=None):
+def decolored_dist(X1, X2, dim=None, p=2., order=2.):
     if dim == None:
         dist1 = 0
         if len(X1[0]) > 1 or len(X2[0]) > 1:
             dist1 = gudhi.wasserstein.wasserstein_distance(
-                X1[0], X2[0], order=2, internal_p=2)
+                X1[0], X2[0], order=order, internal_p=p)
         dist2 = 0
         if len(X1[1]) > 0 or len(X2[1]) > 0:
             dist2 = gudhi.wasserstein.wasserstein_distance(
-                X1[1], X2[1], order=2, internal_p=2)
+                X1[1], X2[1], order=order, internal_p=p)
         dist3 = 0
         if len(X1[2]) > 0 or len(X2[2]) > 0:
             dist3 = gudhi.wasserstein.wasserstein_distance(
-                X1[2], X2[2], order=2, internal_p=2)
+                X1[2], X2[2], order=order, internal_p=p)
 
-        return np.sqrt(dist1**2+dist2**2+dist3**2)
+        temp = np.power(dist1, p) + np.power(dist2, p) + np.power(dist2, p)
+        return np.power(temp, 1/p)
 
     result = np.zeros_like(dim, dtype=float)
     if 0 in dim:
@@ -150,21 +151,21 @@ def decolored_dist(X1, X2, dim=None):
         result[i] = 0
         if len(X1[0]) > 1 or len(X2[0]) > 1:
             result[i] = gudhi.wasserstein.wasserstein_distance(
-                X1[0], X2[0], order=2, internal_p=2)
+                X1[0], X2[0], order=p, internal_p=p)
     if 1 in dim:
         i = dim.index(1)
         result[i] = 0
         if len(X1[1]) > 0 or len(X2[1]) > 0:
             result[i] = gudhi.wasserstein.wasserstein_distance(
-                X1[1], X2[1], order=2, internal_p=2)
+                X1[1], X2[1], order=p, internal_p=p)
     if 2 in dim:
         i = dim.index(2)
         result[i] = 0
         if len(X1[2]) > 0 or len(X2[2]) > 0:
             result[i] = gudhi.wasserstein.wasserstein_distance(
-                X1[2], X2[2], order=2, internal_p=2)
+                X1[2], X2[2], order=p, internal_p=p)
 
-    return tuple(result)
+    return result.tolist()
 
 
 def tup_sort(a, b):
@@ -173,7 +174,7 @@ def tup_sort(a, b):
     return (b, a)
 
 
-def cluster_centre(C, dict_dist):
+def cluster_centre(C, dict_dist, p=2):
     min_centre = None
     min_distance = np.inf
 
@@ -181,7 +182,7 @@ def cluster_centre(C, dict_dist):
         dist = 0
         for j in C:
             if j != i:
-                dist += dict_dist[tup_sort(i, j)]**2
+                dist += np.power(dict_dist[tup_sort(i, j)], p)
         if dist < min_distance:
             min_distance = dist
             min_centre = i
@@ -253,13 +254,13 @@ if __name__ == '__main__':
     min_persistence = 3
     radius = np.sqrt(min_persistence)
     scan = scan_from_index(spl[0])
-    PS1 = points_set(scan)
+    PS1 = point_set(scan)
     PS1.normalize(PS1.height()*100)
 
     decolored_PS1 = PS1.DecoloredPersistence(min_persistence=min_persistence)
 
     scan = scan_from_index(spl[1])
-    PS2 = points_set(scan)
+    PS2 = point_set(scan)
     PS2.normalize(PS2.height()*100)
 
     decolored_PS2 = PS2.DecoloredPersistence(min_persistence=min_persistence)
