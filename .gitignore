@@ -22,3 +22,13 @@ __pycache__/utils.cpython-39.pyc
 .ipynb_checkpoints/Silhouette-Female-checkpoint.ipynb
 .ipynb_checkpoints/Silhouette-Male-checkpoint.ipynb
 Data/X1_Dist_H0.bin
+Silhouette.bin
+Data/X1_Dist_H1.bin
+Wasserstein.bin
+Data/X1_Dist_H2.bin
+Data/XX1_decolor.bin
+Data/XX1.bin
+Data/XY1_decolor.bin
+Data/XY1.bin
+Data/MPI/X_decolor.bin
+Data/MPI/X.bin

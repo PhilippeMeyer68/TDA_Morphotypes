@@ -6,18 +6,24 @@
 #   - Pour calculer les distances entre tous les diagrammes:
 #       python .\computation.py -i ./Data/XY.bin -i ./Data/XX.bin -o ./Data -f X -v -dist -p
 
-import argparse
 import utils as ut
 from os import listdir, makedirs
 from os.path import exists
-from meshio import read
-from pickle import dump, load
-from datetime import timedelta
+
+argparse = ut.importer('argparse')
+read = ut.importer('meshio', 'read')
+dump, load = ut.importer('pickle', 'dump', 'load')
+timedelta = ut.importer('datetime', 'timedelta')
+loadmat = ut.importer('scipy.io', 'loadmat')
 
 
 def scan_from_index(path):
-    scan = read(path)
-    scan = scan.points
+    if path[-4:] == '.mat':
+        mat = loadmat(path)
+        scan = mat['points']
+    else:
+        scan = read(path)
+        scan = scan.points
     ps = ut.point_set(scan)
     ps.normalize()
 
@@ -64,8 +70,12 @@ if __name__ == '__main__':
     if not args.parallel:
         def scan_from_index(i, index):
             path = args.input[i] + str(all_scans[i][index])
-            scan = read(path)
-            scan = scan.points
+            if path[-4:] == '.mat':
+                mat = loadmat(path)
+                scan = mat['points']
+            else:
+                scan = read(path)
+                scan = scan.points
             return scan
     else:
         import multiprocessing as mp
@@ -119,7 +129,8 @@ if __name__ == '__main__':
                     k = 1
 
                 pool = mp.Pool(nb_cpu)
-                diags = pool.starmap(diagrams, [(set, args.min_persistence) for set in sets])
+                diags = pool.starmap(
+                    diagrams, [(set, args.min_persistence) for set in sets])
                 pool.close()
 
                 for diag in diags:
@@ -181,7 +192,8 @@ if __name__ == '__main__':
 
             pool = mp.Pool(nb_cpu)
             for i in range(nb_total):
-                temp = pool.starmap(decolored_dist, [(Xd[i], Xj, args.internal_p, args.order) for Xj in Xd[i+1:]])
+                temp = pool.starmap(
+                    decolored_dist, [(Xd[i], Xj, args.internal_p, args.order) for Xj in Xd[i+1:]])
                 for j in range(i+1, nb_total):
                     [d0[(i, j)], d1[(i, j)], d2[(i, j)]] = temp[j-i-1]
             pool.close()

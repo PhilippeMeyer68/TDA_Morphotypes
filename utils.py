@@ -1,11 +1,38 @@
-import numpy as np
-import matplotlib.pyplot as plt
-import plotly.graph_objects as go
-import gudhi
-import gudhi.wasserstein
-import meshio
 import os
-import networkx as nx
+
+def importer(module, *args):
+    def importer_(module):
+        from importlib import import_module
+        from subprocess import check_call
+        from sys import executable
+
+        if '.' in module:
+            index = module.index('.')
+            package = module[:index]
+            module = module[index:]
+        else:
+            package = None
+        try:
+            return import_module(module, package)
+        except:
+            check_call([executable, '-m', 'pip', 'install', '-U', package])
+        finally:
+            return import_module(module, package)
+    if len(args) == 0:
+        return importer_(module)    
+    result = [getattr(importer(module), fun) for fun in args]
+    if len(args) == 1:
+        return result[0]
+    return tuple(result)
+
+nx = importer('networkx')
+np = importer('numpy')
+plt = importer('matplotlib.pyplot')
+go = importer('plotly.graph_objects')
+gudhi = importer('gudhi')
+gw = importer('gudhi.wasserstein')
+meshio = importer('meshio')
+io = importer('scipy.io')
 
 
 class Graph(nx.Graph):
@@ -130,40 +157,40 @@ class point_set:
 def decolored_dist(X1, X2, dim=None, p=2., order=2.):
     if dim == None:
         dist1 = 0
-        if len(X1[0]) > 1 or len(X2[0]) > 1:
-            dist1 = gudhi.wasserstein.wasserstein_distance(
-                X1[0], X2[0], order=order, internal_p=p)
+        if len(np.array(X1[0])) > 1 or len(np.array(X2[0])) > 1:
+            dist1 = gw.wasserstein_distance(
+                np.array(X1[0]), np.array(X2[0]), order=order, internal_p=p)
         dist2 = 0
-        if len(X1[1]) > 0 or len(X2[1]) > 0:
-            dist2 = gudhi.wasserstein.wasserstein_distance(
-                X1[1], X2[1], order=order, internal_p=p)
+        if len(np.array(X1[1])) > 0 or len(np.array(X2[1])) > 0:
+            dist2 = gw.wasserstein_distance(
+                np.array(X1[1]), np.array(X2[1]), order=order, internal_p=p)
         dist3 = 0
-        if len(X1[2]) > 0 or len(X2[2]) > 0:
-            dist3 = gudhi.wasserstein.wasserstein_distance(
-                X1[2], X2[2], order=order, internal_p=p)
+        if len(np.array(X1[2])) > 0 or len(np.array(X2[2])) > 0:
+            dist3 = gw.wasserstein_distance(
+                np.array(X1[2]), np.array(X2[2]), order=order, internal_p=p)
 
-        temp = np.power(dist1, p) + np.power(dist2, p) + np.power(dist2, p)
+        temp = np.power(dist1, p) + np.power(dist2, p) + np.power(dist3, p)
         return np.power(temp, 1/p)
 
     result = np.zeros_like(dim, dtype=float)
     if 0 in dim:
         i = dim.index(0)
         result[i] = 0
-        if len(X1[0]) > 1 or len(X2[0]) > 1:
-            result[i] = gudhi.wasserstein.wasserstein_distance(
-                X1[0], X2[0], order=p, internal_p=p)
+        if len(np.array(X1[0])) > 1 or len(np.array(X2[0])) > 1:
+            result[i] = gw.wasserstein_distance(
+                np.array(X1[0]), np.array(X2[0]), order=p, internal_p=p)
     if 1 in dim:
         i = dim.index(1)
         result[i] = 0
-        if len(X1[1]) > 0 or len(X2[1]) > 0:
-            result[i] = gudhi.wasserstein.wasserstein_distance(
-                X1[1], X2[1], order=p, internal_p=p)
+        if len(np.array(X1[1])) > 0 or len(np.array(X2[1])) > 0:
+            result[i] = gw.wasserstein_distance(
+                np.array(X1[1]), np.array(X2[1]), order=p, internal_p=p)
     if 2 in dim:
         i = dim.index(2)
         result[i] = 0
-        if len(X1[2]) > 0 or len(X2[2]) > 0:
-            result[i] = gudhi.wasserstein.wasserstein_distance(
-                X1[2], X2[2], order=p, internal_p=p)
+        if len(np.array(X1[2])) > 0 or len(np.array(X2[2])) > 0:
+            result[i] = gw.wasserstein_distance(
+                np.array(X1[2]), np.array(X2[2]), order=p, internal_p=p)
 
     return result.tolist()
 
@@ -174,7 +201,7 @@ def tup_sort(a, b):
     return (b, a)
 
 
-def cluster_centre(C, dict_dist, p=2):
+def cluster_centre(C, dict_dist, mean_dist=False, p=2):
     min_centre = None
     min_distance = np.inf
 
@@ -187,10 +214,12 @@ def cluster_centre(C, dict_dist, p=2):
             min_distance = dist
             min_centre = i
 
+    if mean_dist:
+        return min_centre, np.power(min_distance, 1/p)/len(C)
     return min_centre
 
 
-def cluster_medoid(C, dict_dist):
+def cluster_medoid(C, dict_dist, mean_dist=False):
     min_centre = None
     min_distance = np.inf
 
@@ -203,31 +232,22 @@ def cluster_medoid(C, dict_dist):
             min_distance = dist
             min_centre = i
 
+    if mean_dist:
+        return min_centre, min_distance/len(C)
     return min_centre
-
-
-def dist_moyenne_cluster_centre(C, dict_dist):
-    centre = cluster_centre(C, dict_dist)
-    temp = 0
-    for i in C:
-        if i != centre:
-            temp += dict_dist[tup_sort(i, centre)]
-
-    return temp / len(C)
 
 
 def indice_DB(dict_clusters, dict_dist):
     SDB = 0
     for C1 in dict_clusters:
         i = dict_clusters[C1]
-        temp1 = dist_moyenne_cluster_centre(i, dict_dist)
+        centre1, temp1 = cluster_centre(i, dict_dist, True)
         val = -np.inf
         for C2 in dict_clusters:
             j = dict_clusters[C2]
             if C2 != C1:
-                temp2 = dist_moyenne_cluster_centre(j, dict_dist)
-                temp3 = dict_dist[tup_sort(cluster_centre(
-                    i, dict_dist), cluster_centre(j, dict_dist))]
+                centre2, temp2 = cluster_centre(j, dict_dist, True)
+                temp3 = dict_dist[tup_sort(centre1, centre2)]
                 temp4 = (temp1 + temp2) / temp3
                 if temp4 > val:
                     val = temp4
@@ -238,45 +258,49 @@ def indice_DB(dict_clusters, dict_dist):
 
 
 if __name__ == '__main__':
-    pathglob = 'E:\Projet-M2\\2021-m2-ditex-morphotypes\Data\Male\\'  # À CHANGER
-    # pathglob = '/mnt/e/Projet-M2/2021-m2-ditex-morphotypes/Data/Male/'  # À CHANGER
-    all_scans = os.listdir(pathglob)
+    path = 'D:/Downloads/caesar-fitted-meshes/'
+    filenames = [path+filename for filename in os.listdir(path)]
 
-    def scan_from_index(i):
-        path = pathglob + str(all_scans[i])
-        scan = meshio.read(path)
-        scan = scan.points
-        return scan
-
+    if filenames[0][-4:] == '.mat':
+        def scan_from_file(index):
+            mat = io.loadmat(filenames[index])
+            scan = np.array(mat['points'])
+            return scan
+    else:
+        def scan_from_file(index):            
+            scan = meshio.read(filenames[index])
+            scan = scan.points
     # spl = np.random.choice(range(len(all_scans)), 2, replace=False)
-    spl = [1487, 1057]
+    spl = [770, 1385]
 
     min_persistence = 3
     radius = np.sqrt(min_persistence)
-    scan = scan_from_index(spl[0])
+    scan = scan_from_file(spl[0])
     PS1 = point_set(scan)
-    PS1.normalize(PS1.height()*100)
+    PS1.normalize()
 
     decolored_PS1 = PS1.DecoloredPersistence(min_persistence=min_persistence)
 
-    scan = scan_from_index(spl[1])
-    PS2 = point_set(scan)
-    PS2.normalize(PS2.height()*100)
+    # scan = scan_from_index(spl[1])
+    # PS2 = point_set(scan)
+    # PS2.normalize(PS2.height()*100)
 
-    decolored_PS2 = PS2.DecoloredPersistence(min_persistence=min_persistence)
+    # decolored_PS2 = PS2.DecoloredPersistence(min_persistence=min_persistence)
 
-    print("\nSCANS "+str(spl[0])+" ET "+str(spl[1]))
-    a, b, c = decolored_dist(decolored_PS1, decolored_PS2, [0, 1, 2])
-    print("Distance entre diagrammes :", np.sqrt(a**2+b**2+c**2))
+    # print("\nSCANS "+str(spl[0])+" ET "+str(spl[1]))
+    # a, b, c = decolored_dist(decolored_PS1, decolored_PS2, [0, 1, 2])
+    # print("Distance entre diagrammes :", np.sqrt(a**2+b**2+c**2))
 
-    # fig = plt.figure(figsize=(12, 5))
-    # fig.suptitle(spl[0])
-    # PS1.PlotPersistenceDiagram(axes=fig.add_subplot(121))
-    # PS1.PlotPersistenceBarcode(axes=fig.add_subplot(122))
-    # plt.show()
+    fig = plt.figure(figsize=(12, 5))
+    fig.suptitle(spl[0])
+    PS1.PlotPersistenceDiagram(axes=fig.add_subplot(121))
+    PS1.PlotPersistenceBarcode(axes=fig.add_subplot(122))
+    plt.show()
+    # plt.savefig('E:/Projet-M2/2021-m2-ditex-morphotypes/Images/SPRING2394fD')
 
     # fig = plt.figure(figsize=(12, 5))
     # fig.suptitle(spl[1])
     # PS2.PlotPersistenceDiagram(axes=fig.add_subplot(121))
     # PS2.PlotPersistenceBarcode(axes=fig.add_subplot(122))
-    # plt.show()
+    # # plt.show()
+    # plt.savefig('E:/Projet-M2/2021-m2-ditex-morphotypes/Images/SPRING4531fD')
