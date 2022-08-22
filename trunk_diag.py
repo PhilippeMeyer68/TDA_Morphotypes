@@ -17,14 +17,14 @@ def diagrams(ps, min_p):
 
 
 if __name__ == '__main__':
-    nb_cpu = mp.cpu_count()
-    min_persistence = 5500 / 999
+    nb_cpu = 8
+    min_persistence = 5
 
     print("\033[H\033[JMALE : ", end="")
     print('Loading data...')
 
     pool = mp.Pool(nb_cpu)
-    with open('./Data/male.bin', 'rb') as fp:
+    with open('E:/TDA/male.bin', 'rb') as fp:
         psets = load(fp)
 
     sets = [ut.point_set(pset) for pset in psets]
@@ -45,14 +45,14 @@ if __name__ == '__main__':
 
     print('\rSaving diagrams       ', end='')
 
-    with open('.Data/XY1_trunk_decolor.bin', 'wb') as fp:
+    with open('E:/TDA/TDA_Morphotypes/Data/XY_trunk_decolor.bin', 'wb') as fp:
         dump(Xd, fp)
 
     print("\033[H\033[JFEMALE : ", end="")
     print('Loading data...')
 
     pool = mp.Pool(nb_cpu)
-    with open('./Data/female.bin', 'rb') as fp:
+    with open('E:/TDA/female.bin', 'rb') as fp:
         psets = load(fp)
 
     sets = [ut.point_set(pset) for pset in psets]
@@ -73,7 +73,7 @@ if __name__ == '__main__':
 
     print('\rSaving diagrams       ', end='')
 
-    with open('./Data/XX_trunk_decolor.bin', 'wb') as fp:
+    with open('E:/TDA/TDA_Morphotypes/Data/XX_trunk_decolor.bin', 'wb') as fp:
         dump(Xd, fp)
 
     print('\rFinished!             ')

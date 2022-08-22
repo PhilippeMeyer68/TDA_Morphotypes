@@ -1,6 +1,6 @@
 # Depuis le répertoire du dépôt:
 #   - Pour calculer les diagrammes pour les hommes:
-#       python .\computation.py -i [Chemin du répertoire contenant les scans masculins] -o ./Data -f XX -v -diag
+#       python .\computation.py -i [Chemin du répertoire contenant les scans masculins] -o ./Data -f XY -v -diag
 #   - Pour calculer les diagrammes et les distances entre eux pour les femmes:
 #       python .\computation.py -i [Chemin du répertoire contenant les scans féminins] -o ./Data -f XX -v -diag -dist
 #   - Pour calculer les distances entre tous les diagrammes:
@@ -79,7 +79,7 @@ if __name__ == '__main__':
             return scan
     else:
         import multiprocessing as mp
-        nb_cpu = mp.cpu_count()
+        nb_cpu = 8
 
     if args.verbose == True:
         from time import time
@@ -152,7 +152,8 @@ if __name__ == '__main__':
 
                     point_set = ut.point_set(scan)
                     point_set.normalize()
-                    diag = point_set.Persistence(min_persistence=3)
+                    diag = point_set.Persistence(
+                        min_persistence=args.min_persistence)
                     X.append(diag)
 
                     diag_decolor = point_set.DecoloredPersistence()
