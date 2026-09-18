@@ -1,22 +1,13 @@
-__pycache__/utils.cpython-310.pyc
-Data/X_Dist_H0.bin
-Data/X_Dist_H1.bin
-Data/X_Dist_H2.bin
-Data/X_trunk_Dist_H0.bin
-Data/X_trunk_Dist_H1.bin
-Data/X_trunk_Dist_H2.bin
-Data/XX_Dist_H0.bin
-Data/XX_Dist_H1.bin
-Data/XX_Dist_H2.bin
-Data/XX.bin
-Data/XY_Dist_H0.bin
-Data/XY_Dist_H1.bin
-Data/XY_Dist_H2.bin
-Data/XY.bin
-__pycache__/utils.cpython-39.pyc
-computation.py
-Data/X1_Dist_H0.bin
-Data/X1_Dist_H1.bin
-Data/X1_Dist_H2.bin
-Data/XX1.bin
-Data/XY1.bin
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# SPRING meshes (see README.md) and Wasserstein distances (250 MB, recomputed
+# from the diagrams in ~10 min). The persistence diagrams in data/cache/diagrams
+# are versioned.
+data/raw/
+data/cache/distances/

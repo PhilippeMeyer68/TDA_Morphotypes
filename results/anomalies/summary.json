@@ -1,0 +1,55 @@
+{
+  "male": {
+    "known": [
+      "SPRING2277",
+      "SPRING2882",
+      "SPRING2921",
+      "SPRING2962",
+      "SPRING4624"
+    ],
+    "best_range": [
+      21,
+      46
+    ],
+    "isolated_are_anomalies_pct": 100.0,
+    "anomalies_detected_pct": 80.0,
+    "criterion_pct": 90.0,
+    "solos_at_range_start": [
+      "SPRING2277",
+      "SPRING2882",
+      "SPRING2962",
+      "SPRING4624"
+    ],
+    "detected_at_range_start": [
+      "SPRING2277",
+      "SPRING2882",
+      "SPRING2962",
+      "SPRING4624"
+    ]
+  },
+  "female": {
+    "known": [
+      "SPRING1212",
+      "SPRING2340",
+      "SPRING2825",
+      "SPRING2997"
+    ],
+    "best_range": [
+      23,
+      37
+    ],
+    "isolated_are_anomalies_pct": 100.0,
+    "anomalies_detected_pct": 75.0,
+    "criterion_pct": 87.5,
+    "solos_at_range_start": [
+      "SPRING1212",
+      "SPRING2825",
+      "SPRING2997"
+    ],
+    "detected_at_range_start": [
+      "SPRING1212",
+      "SPRING2825",
+      "SPRING2997"
+    ]
+  }
+}

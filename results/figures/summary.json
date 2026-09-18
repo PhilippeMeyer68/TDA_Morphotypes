@@ -1,0 +1,134 @@
+{
+  "example_homologies": [
+    {
+      "number": 0,
+      "degree": 2,
+      "degree_number": 7,
+      "birth": 104.6860441167338,
+      "death": 116.33760090229927
+    },
+    {
+      "number": 1,
+      "degree": 2,
+      "degree_number": 6,
+      "birth": 97.86285083472374,
+      "death": 121.48029114328534
+    },
+    {
+      "number": 2,
+      "degree": 1,
+      "degree_number": 5,
+      "birth": 41.31597363187137,
+      "death": 47.30775311136593
+    },
+    {
+      "number": 3,
+      "degree": 1,
+      "degree_number": 4,
+      "birth": 37.858437510968386,
+      "death": 55.65210628553099
+    },
+    {
+      "number": 4,
+      "degree": 1,
+      "degree_number": 3,
+      "birth": 24.96347050183156,
+      "death": 29.997150991356662
+    },
+    {
+      "number": 5,
+      "degree": 2,
+      "degree_number": 5,
+      "birth": 24.847276214999397,
+      "death": 61.83958891652213
+    },
+    {
+      "number": 6,
+      "degree": 2,
+      "degree_number": 4,
+      "birth": 21.96025757514598,
+      "death": 26.610206815004986
+    },
+    {
+      "number": 7,
+      "degree": 2,
+      "degree_number": 3,
+      "birth": 21.929690186148306,
+      "death": 26.798760218123476
+    },
+    {
+      "number": 8,
+      "degree": 2,
+      "degree_number": 2,
+      "birth": 6.707058712517755,
+      "death": 10.794111431483344
+    },
+    {
+      "number": 9,
+      "degree": 2,
+      "degree_number": 1,
+      "birth": 5.08997194868542,
+      "death": 129.90675483293498
+    },
+    {
+      "number": 10,
+      "degree": 1,
+      "degree_number": 2,
+      "birth": 0.6929583549282607,
+      "death": 4.743660202119868
+    },
+    {
+      "number": 11,
+      "degree": 1,
+      "degree_number": 1,
+      "birth": 0.2797836346151419,
+      "death": 3.7051257744548147
+    },
+    {
+      "number": 12,
+      "degree": 0,
+      "degree_number": 1,
+      "birth": 0.0,
+      "death": Infinity
+    }
+  ],
+  "anomaly_example_h2": [
+    {
+      "degree_number": 6,
+      "barcode_number": 2,
+      "birth": 43.12584033153365,
+      "death": 160.86477802105313
+    },
+    {
+      "degree_number": 5,
+      "barcode_number": 3,
+      "birth": 34.204796790923254,
+      "death": 42.189147639486556
+    },
+    {
+      "degree_number": 3,
+      "barcode_number": 5,
+      "birth": 29.404379010503277,
+      "death": 44.80457522267399
+    }
+  ],
+  "normalisation_example": {
+    "heights_m": {
+      "SPRING0105": 1.892,
+      "SPRING0071": 1.93,
+      "SPRING0207": 1.648
+    },
+    "distances_before": {
+      "SPRING0105-SPRING0071": 0.005129954532022716,
+      "SPRING0105-SPRING0207": 0.009924867144931576,
+      "SPRING0071-SPRING0207": 0.005657231857981191
+    },
+    "closest_before": "SPRING0105-SPRING0071",
+    "distances_after": {
+      "SPRING0105-SPRING0071": 0.00466198121045799,
+      "SPRING0105-SPRING0207": 0.0054693798741039384,
+      "SPRING0071-SPRING0207": 0.00376856550429809
+    },
+    "closest_after": "SPRING0071-SPRING0207"
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "_source": "de Rose, Meyer & Bertrand (2023). Human Body Shapes Anomaly Detection and Classification Using Persistent Homology. Algorithms 16(3), 161. https://doi.org/10.3390/a16030161",
+  "anomalies": {
+    "male": {
+      "known": ["SPRING2277", "SPRING2882", "SPRING2921", "SPRING2962", "SPRING4624"],
+      "best_range": [21, 46],
+      "isolated_are_anomalies_pct": 100.0,
+      "anomalies_detected_pct": 80.0,
+      "criterion_pct": 90.0,
+      "detected_at_range_start": ["SPRING2277", "SPRING2882", "SPRING2962", "SPRING4624"]
+    },
+    "female": {
+      "known": ["SPRING1212", "SPRING2340", "SPRING2825", "SPRING2997"],
+      "best_range": [23, 37],
+      "isolated_are_anomalies_pct": 100.0,
+      "anomalies_detected_pct": 75.0,
+      "criterion_pct": 87.5,
+      "detected_at_range_start": ["SPRING1212", "SPRING2825", "SPRING2997"]
+    }
+  },
+  "table1_mean_gdi_wasserstein": {
+    "body": {"complete": 0.2, "ward": 0.54, "kmedoids": 0.526},
+    "trunk": {"complete": 0.21, "ward": 0.553, "kmedoids": 0.582}
+  },
+  "table2_mean_gdi_silhouette": {
+    "body": {"ward": 0.738, "kmeans": 0.73, "kmedoids": 0.737},
+    "trunk": {"ward": 0.765, "kmeans": 0.767, "kmedoids": 0.827}
+  },
+  "table3_male_morphotypes": {
+    "size": [2, 4, 50, 311, 125, 273, 415, 332],
+    "proportion_pct": [0.1, 0.3, 3, 21, 8, 18, 27, 22],
+    "mean_distance": [79.6, 39.4, 28.6, 17.4, 20.3, 16.3, 18.9, 19.4],
+    "diameter": [79.6, 53.9, 62, 49.6, 59.2, 54.6, 67.1, 69.4],
+    "distance_to_mean": [39.8, 24.4, 19.6, 12.1, 14.2, 11.5, 13.1, 13.6],
+    "distance_mean_medoid": [39.8, 20.1, 9, 3.4, 5.9, 6.9, 5.1, 6.1],
+    "medoid": [null, "SPRING2864", "SPRING1502", "SPRING2055", "SPRING2640", "SPRING4286", "SPRING2982", "SPRING4505"],
+    "cluster_1_members": ["SPRING0517", "SPRING0553"],
+    "suggested_by": {"davies_bouldin": 8, "dunn": 8}
+  },
+  "table4_female_morphotypes": {
+    "size": [306, 263, 403, 107, 122, 112, 214],
+    "proportion_pct": [20, 17, 27, 7, 8, 7, 14],
+    "mean_distance": [14.2, 12.7, 14.1, 14.3, 14, 19, 21.3],
+    "diameter": [36.6, 32, 32.1, 31.9, 38.2, 59.3, 62.4],
+    "distance_to_mean": [10.1, 9, 10.1, 10.1, 9.9, 13.3, 14.8],
+    "distance_mean_medoid": [3.4, 3.4, 4.5, 3.3, 3.6, 5.9, 5.2],
+    "medoid": ["SPRING0522", "SPRING2018", "SPRING1604", "SPRING0174", "SPRING1076", "SPRING4507", "SPRING1174"],
+    "suggested_by": {"silhouette": 7, "dunn": 7}
+  },
+  "_known_discrepancies": {
+    "table4_female_morphotypes.proportion_pct[2]": "The paper reports 27% for C3 (403 women). The original notebook divided by 1513 instead of 1527 (the 1531 female scans minus 4 anomalies); 403/1527 = 26.4%."
+  }
+}
